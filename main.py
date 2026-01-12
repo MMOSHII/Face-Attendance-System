@@ -7,45 +7,53 @@ import cv2
 from utils.data_manager import load_students, save_students, update_attendance_record
 from utils.face_utils import predict_student, save_face_snapshot
 
-
 class AttendanceApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Face Attendance System")
-        self.root.geometry("950x550")
+        self.root.title("Attendance")
+        self.root.geometry("900x520")
+        self.root.configure(bg="#F7F7F7")
 
         self.start_time = "09:00"
         self.end_time = "23:59"
 
-        menubar = tk.Menu(root)
-        root.config(menu=menubar)
+        self.menubar = tk.Menu(root, bg="#FFFFFF", bd=0)
+        root.config(menu=self.menubar)
 
-        settings_menu = tk.Menu(menubar, tearoff=0)
-        settings_menu.add_command(label="Set Time Range", command=self.set_time_range)
-        menubar.add_cascade(label="Settings", menu=settings_menu)
+        self.settings_menu = tk.Menu(self.menubar, tearoff=0, bg="#FFFFFF")
+        self.settings_menu.add_command(label="Set Time Range", command=self.set_time_range)
+        self.menubar.add_cascade(label="Settings", menu=self.settings_menu)
 
-        self.frame_main = ttk.Frame(root)
-        self.frame_main.pack(fill="both", expand=True, padx=10, pady=10)
+        self.time_index = self.menubar.index("end") + 1
+        self.menubar.add_cascade(label=f"Time Window: {self.start_time} → {self.end_time}")
 
-        self.lbl_video = tk.Label(self.frame_main)
-        self.lbl_video.grid(row=0, column=0, padx=10, pady=10)
+        self.frame_main = tk.Frame(root, bg="#F7F7F7")
+        self.frame_main.pack(fill="both", expand=True, padx=20, pady=20)
 
-        self.info_frame = ttk.Frame(self.frame_main)
-        self.info_frame.grid(row=0, column=1, sticky="n")
+        self.lbl_video = tk.Label(self.frame_main, bg="#EDEDED", bd=0)
+        self.lbl_video.grid(row=0, column=0, padx=15, pady=15)
 
-        self.lbl_status = ttk.Label(self.info_frame, text="Click 'Start' to begin", font=("Arial", 12))
-        self.lbl_status.pack(pady=10)
+        self.info_frame = tk.Frame(self.frame_main, bg="#F7F7F7")
+        self.info_frame.grid(row=0, column=1, sticky="nsew", padx=30)
+        self.frame_main.columnconfigure(1, weight=1)
 
-        self.lbl_name = ttk.Label(self.info_frame, text="", font=("Arial", 14, "bold"))
-        self.lbl_name.pack(pady=10)
+        self.lbl_status = tk.Label(self.info_frame, text="Ready", font=("Inter", 13), bg="#F7F7F7")
+        self.lbl_status.pack(pady=8, anchor="center", fill="x")
 
-        self.lbl_conf = ttk.Label(self.info_frame, text="", font=("Arial", 12))
+        self.lbl_name = tk.Label(self.info_frame, text="", font=("Inter", 15, "bold"), bg="#F7F7F7")
+        self.lbl_name.pack(pady=8)
+
+        self.lbl_conf = tk.Label(self.info_frame, text="", font=("Inter", 12), fg="#555", bg="#F7F7F7")
         self.lbl_conf.pack(pady=5)
 
-        self.lbl_timerange = ttk.Label(self.info_frame, text=f"Allowed Time: {self.start_time} - {self.end_time}", font=("Arial", 11))
-        self.lbl_timerange.pack(pady=20)
+        style = ttk.Style()
+        style.configure("TButton",
+                        padding=8,
+                        relief="flat",
+                        font=("Inter", 12),
+                        foreground="#333")
 
-        self.start_btn = ttk.Button(root, text="Start Attendance", command=self.start_system)
+        self.start_btn = ttk.Button(root, text="Start", style="TButton", command=self.start_system)
         self.start_btn.pack(pady=10)
 
         self.cap = None
@@ -77,7 +85,12 @@ class AttendanceApp:
         def save_time():
             self.start_time = f"{int(start_h.get()):02d}:{int(start_m.get()):02d}"
             self.end_time = f"{int(end_h.get()):02d}:{int(end_m.get()):02d}"
-            self.lbl_timerange.config(text=f"Allowed Time: {self.start_time} - {self.end_time}")
+
+            self.menubar.entryconfig(
+                self.time_index,
+                label=f"Time Window: {self.start_time} → {self.end_time}"
+            )
+
             dialog.destroy()
 
         ttk.Button(dialog, text="Save", command=save_time).grid(row=2, column=0, columnspan=4, pady=10)

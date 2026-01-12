@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 import sys, os
+import pandas as pd
 from PIL import Image, ImageTk
 
 try:
@@ -182,6 +183,10 @@ class StudentManagerApp:
         tk.Button(search_frame, text="✖ Clear", command=self.global_clear,
                   bg="#7f8c8d", fg="white", font=("Arial", 9, "bold"),
                   relief="flat").pack(side="left", padx=5)
+        
+        tk.Button(search_frame, text="Export", command=self.global_export,
+                  bg="#2f9459", fg="white", font=("Arial", 9, "bold"),
+                  relief="flat").pack(side="left", padx=5)
 
     def build_notebook(self):
         self.notebook = ttk.Notebook(self.root)
@@ -309,6 +314,34 @@ class StudentManagerApp:
             self.refresh_treeview(self.tree, self.student_df)
         else:
             self.refresh_treeview(self.history_tree, self.attendance_df)
+
+    def global_export(self):
+        filepath = r"Data\attendance_history.csv"
+
+        required_columns = {
+            'id', 'name', 'timestamp', 'status'
+        }
+
+        try:
+            df = pd.read_csv(filepath)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File tidak ditemukan: {filepath}")
+        except Exception as e:
+            raise Exception(f"Gagal membaca CSV: {e}")
+
+        if not required_columns.issubset(df.columns):
+            missing = required_columns - set(df.columns)
+            raise ValueError(f"Kolom berikut hilang: {', '.join(missing)}")
+
+        df['id'] = df['id'].astype(str)
+        df['name'] = df['name'].astype(str)
+        df['timestamp'] = df['timestamp'].astype(str)
+        df['status'] = df['status'].astype(str)
+
+        downloads_path = str(Path.home() / "Downloads")
+
+        save_path = os.path.join(downloads_path, "attendance_export.csv")
+        df.to_csv(save_path, index=False)
 
     def select_photos(self):
         filedialog.askopenfilenames(filetypes=[("Images", "*.jpg *.png *.jpeg")])

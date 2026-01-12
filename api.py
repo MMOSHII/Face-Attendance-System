@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np, cv2, uvicorn
+from pyngrok import ngrok
 
 from utils.face_utils import predict_student
 from utils.data_manager import update_attendance_record, load_students
@@ -19,7 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 async def decode_uploaded_image(image: UploadFile):
     contents = await image.read()
@@ -111,4 +111,8 @@ async def get_students():
 
 
 if __name__ == "__main__":
+    # public_url = ngrok.connect(8000).public_url
+    # print("Public API:", public_url)
+    # print("Docs:", public_url + "/docs")
+
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

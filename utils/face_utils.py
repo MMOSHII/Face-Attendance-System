@@ -23,7 +23,7 @@ def save_face_snapshot(student: dict, frame, face_coords, timestamp):
 
     log_message(f"📸 Snapshot saved for {student['nama']}: {filepath}")
 
-def predict_student(gray_face, students, threshold=70):
+def predict_student(gray_face, students, threshold=60):
     recognizer.read(MODEL_PATH)
     face_resized = preprocess_face(gray_face)
 

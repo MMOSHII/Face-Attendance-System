@@ -16,24 +16,44 @@ def get_next_id(df):
 # ========================== API ==========================
 
 
-def update_attendance_record(student: dict, start_time_str: str, end_time_str: str, minutes=10) -> bool:
+def update_attendance_record(student: dict, start_time_str: str, end_time_str: str, minutes=10):
+    # Parse jam mulai & jam selesai
     START_TIME = datetime.strptime(start_time_str, "%H:%M").time()
     END_TIME = datetime.strptime(end_time_str, "%H:%M").time()
 
-    last_time_str = student.get('waktu_kehadiran', "")
-    last_time = datetime.strptime(last_time_str, "%Y-%m-%d %H:%M:%S") if last_time_str else None
+    # Ambil waktu absensi terakhir
+    last_time_str = student.get('waktu_kehadiran', None)
+    last_time = None
+    if last_time_str:
+        try:
+            last_time = datetime.strptime(last_time_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            # Tangani format yang tidak cocok
+            last_time = None
+
     now = datetime.now()
 
+    # Cek apakah jam saat ini berada dalam rentang
     if not (START_TIME <= now.time() <= END_TIME):
         return False, now
 
-    if last_time and (now - last_time) < timedelta(minutes):
+    # Cegah spam absensi dalam jangka pendek
+    if last_time and (now - last_time) < timedelta(minutes=minutes):
         return False, now
 
-    student['total_kehadiran'] = str(int(student.get('total_kehadiran', 0)) + 1)
+    # Update total
+    total = student.get('total_kehadiran', 0)
+    try:
+        total = int(total)
+    except ValueError:
+        total = 0
+
+    student['total_kehadiran'] = str(total + 1)
     student['waktu_kehadiran'] = now.strftime("%Y-%m-%d %H:%M:%S")
 
+    # Simpan ke database
     save_attendance(student)
+
     return True, now
 
 def load_data():
